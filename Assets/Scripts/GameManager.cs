@@ -8,10 +8,6 @@ using UnityEngine.SocialPlatforms.Impl;
 using System.IO;
 using TMPro;
 
-
-
-
-
 #if UNITY_EDITOR
 using UnityEditor;
 #endif    
@@ -20,6 +16,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
     public int score;
+public int highScore;    // PLAYER PREFS SETTINGS
     [SerializeField] private TextMeshProUGUI highScoreText;
     private Button playButton;
     private Button exitButton;
@@ -37,7 +34,16 @@ public class GameManager : MonoBehaviour
             score = 0;
         }
         LoadScore();
+        // #if UNITY_WEBGL
+        //     LoadHighScore();
+        // #endif
     }
+    // private void Start()
+    // {
+    //     // Load the saved high score
+    //     int highScore = PlayerPrefs.GetInt("HighScore", 0);
+    //     Debug.Log("High Score Loaded: " + highScore);
+    // }
     public void StartNew()
     {
         SceneManager.LoadScene(1);
@@ -62,6 +68,9 @@ public class GameManager : MonoBehaviour
     {
         SetupDependencies();
         LoadScore();
+        // #if UNITY_WEBGL
+        //     LoadHighScore();
+        // #endif
     }
     private void SetupDependencies()
     {
@@ -105,6 +114,24 @@ public class GameManager : MonoBehaviour
             highScoreText = GameObject.Find("Canvas/HighScoreText")?.GetComponent<TextMeshProUGUI>(); 
             highScoreText.text = "High Score: " + score;
         }
+    }
+    // PLAYER PREFS SETTINGS
+    public void SaveHighScore()
+    {
+        // Check if the current score is greater than the saved high score
+        highScore = PlayerPrefs.GetInt("HighScore", 0);
+        if (score > highScore)
+        {
+            Debug.Log("New High Score: " + score);
+            PlayerPrefs.SetInt("HighScore", score);
+            PlayerPrefs.Save();
+        }
+    }
+    public void LoadHighScore()
+    {
+        highScore = PlayerPrefs.GetInt("HighScore", 0);
+        highScoreText = GameObject.Find("Canvas/HighScoreText")?.GetComponent<TextMeshProUGUI>();
+        highScoreText.text = "High Score: " + highScore;
     }
 }
 

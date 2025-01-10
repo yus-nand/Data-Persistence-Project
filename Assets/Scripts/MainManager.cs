@@ -70,7 +70,11 @@ public class MainManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);   
-                HighScoreText.text = "High Score: " + GameManager.Instance.score;                       
+                // #if UNITY_WEBGL
+                //     HighScoreText.text = "High Score: " + GameManager.Instance.highScore;
+                // #else
+                    HighScoreText.text = "High Score: " + GameManager.Instance.score;   
+                // #endif                    
             }                                                                       
             
         }
@@ -88,14 +92,26 @@ public class MainManager : MonoBehaviour
 
     public void GameOver()
     {
-        if(m_Points > GameManager.Instance.score)
-        {
-            GameManager.Instance.score = m_Points;
-            GameManager.Instance.SaveScore();
-            Instantiate(NewHighScoreParticles, NewHighScoreParticles.transform.position, Quaternion.identity);
-            NewHighScoreParticles.Play();
-            NewHighScoreText.enabled = true;            // GameObject.Find().GetComponent<>() does not work on disabled objects
-        }
+        
+        // #if UNITY_WEBGL
+        //     if(m_Points > GameManager.Instance.highScore)
+        //     {
+        //         GameManager.Instance.highScore = m_Points;
+        //         GameManager.Instance.SaveHighScore();
+        //         Instantiate(NewHighScoreParticles, NewHighScoreParticles.transform.position, Quaternion.identity);
+        //         NewHighScoreParticles.Play();
+        //         NewHighScoreText.enabled = true;  
+        //     }
+        // #else
+            if(m_Points > GameManager.Instance.score)
+            {
+                GameManager.Instance.score = m_Points;
+                GameManager.Instance.SaveScore();
+                Instantiate(NewHighScoreParticles, NewHighScoreParticles.transform.position, Quaternion.identity);
+                NewHighScoreParticles.Play();
+                NewHighScoreText.enabled = true;            // GameObject.Find().GetComponent<>() does not work on disabled objects
+            }
+        // #endif
         m_GameOver = true;
         GameOverText.SetActive(true);
     }
