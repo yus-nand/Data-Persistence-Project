@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class MainManager : MonoBehaviour
 {
+    public GameObject pauseScreen;
     public Brick BrickPrefab;
     public int LineCount = 6;
     public Rigidbody Ball;
@@ -13,15 +15,24 @@ public class MainManager : MonoBehaviour
     public Text ScoreText;
     public GameObject GameOverText;
     
-    private bool m_Started = false;
-    private int m_Points;
+    [SerializeField] private TextMeshProUGUI HighScoreText;
+    [SerializeField] private TextMeshProUGUI NewHighScoreText;
+    [SerializeField] private TextMeshProUGUI PressQ_text;
+    [SerializeField] private ParticleSystem NewHighScoreParticles;
     
+
+    private bool m_Started = false;
+    private int m_Points;    
     private bool m_GameOver = false;
+    public bool isGamePaused = false;
 
     
     // Start is called before the first frame update
     void Start()
     {
+        NewHighScoreText = GameObject.Find("Canvas/NewHighScoreText")?.GetComponent<TextMeshProUGUI>();          // what a headache
+        HighScoreText = GameObject.Find("Canvas/HighScoreText")?.GetComponent<TextMeshProUGUI>();
+        
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -40,10 +51,11 @@ public class MainManager : MonoBehaviour
 
     private void Update()
     {
-        if (!m_Started)
+        if (!m_Started && !isGamePaused)
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
+                PressQ_text.enabled = false;
                 m_Started = true;
                 float randomDirection = Random.Range(-1.0f, 1.0f);
                 Vector3 forceDir = new Vector3(randomDirection, 1, 0);
@@ -57,8 +69,14 @@ public class MainManager : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            }
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);   
+                HighScoreText.text = "High Score: " + GameManager.Instance.score;                       
+            }                                                                       
+            
+        }
+        if(Input.GetKeyDown(KeyCode.Q))
+        {
+            TogglePause();
         }
     }
 
@@ -70,7 +88,50 @@ public class MainManager : MonoBehaviour
 
     public void GameOver()
     {
+        if(m_Points > GameManager.Instance.score)
+        {
+            GameManager.Instance.score = m_Points;
+            GameManager.Instance.SaveScore();
+            Instantiate(NewHighScoreParticles, NewHighScoreParticles.transform.position, Quaternion.identity);
+            NewHighScoreParticles.Play();
+            NewHighScoreText.enabled = true;            // GameObject.Find().GetComponent<>() does not work on disabled objects
+        }
         m_GameOver = true;
         GameOverText.SetActive(true);
+    }
+    private void TogglePause()
+    {
+        if(isGamePaused)
+        {
+            ResumeGame();
+        }
+        else
+        {
+            PauseGame();
+        }
+    }
+    private void ResumeGame()
+    {
+        isGamePaused = false;
+        pauseScreen.gameObject.SetActive(false);
+        Time.timeScale = 1f;
+    }
+    private void PauseGame()
+    {
+        isGamePaused = true;
+        pauseScreen.gameObject.SetActive(true);
+        Time.timeScale = 0f;
+    }
+    public void QuitGame()
+    {
+        isGamePaused = false;
+        pauseScreen.gameObject.SetActive(false);
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(0);
+    }
+    public void RestartGame()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
